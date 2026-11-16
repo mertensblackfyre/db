@@ -54,19 +54,22 @@ static inline void write_data(_data *kv, const char *file_name, size_t offset) {
 
 static inline char *read_data(const char *file_name, size_t offset) {
 
-  char *page = (char *)calloc(offset, sizeof(char));
-  if (page == NULL) {
-    perror("calloc");
-    return NULL;
-  }
-
   FILE *file = fopen(file_name, "rb");
 
   if (file == NULL) {
     perror("Failed to open file");
     return NULL;
   }
-  fread(page, 1, offset, file);
+
+  char *page = (char *)calloc(offset, sizeof(unsigned char));
+
+  if (page == NULL) {
+    perror("calloc");
+    return NULL;
+  }
+
+  fread(page, 1, offset + 1, file);
+  fclose(file);
   return page;
 }
 
@@ -87,8 +90,41 @@ static inline void serialize(_data *data, size_t *offset) {
   *offset += value_len;
 };
 
-static inline _data *deserialize(char *page) {
-  printf("%s", page);
+static inline _data *deserialize(char *page, size_t offset) {
+
+  size_t c_offset = 0;
+  size_t value_len = 0;
+  size_t key_len = 0;
+
+  // key len
+  memcpy(&key_len, page, sizeof(size_t));
+  c_offset += sizeof(size_t) + key_len;
+
+  // value len
+  memcpy(&value_len, page + c_offset, sizeof(size_t));
+
+  unsigned char *key =
+      (unsigned char *)calloc(key_len+1, sizeof(unsigned char));
+  if (key == NULL) {
+    perror("calloc");
+    return NULL;
+  }
+
+  // unsigned char *value =
+  //   (unsigned char *)calloc(value_len + 1, sizeof(unsigned char));
+
+  c_offset = sizeof(size_t);
+  memcpy(key, page + c_offset, key_len+1);
+  // c_offset += sizeof(size_t);
+  // memcpy(&value, page + c_offset, value_len + 1);
+
+  printf("%s\n", (char *)key);
+
+  // printf("%d\n", (int)key_len);
+  // printf("%d\n", (int)value_len);
+  free(page);
+  free(key);
+  // free(value);
   return NULL;
 };
 

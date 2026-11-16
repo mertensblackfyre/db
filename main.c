@@ -22,7 +22,7 @@ int main(void) {
   write_data(kv1, "db.db", offset);
 
   char *p = read_data("db.db", offset);
-  deserialize(p);
+  deserialize(p, offset);
 
   free(kv1->key);
   free(kv1->value);
